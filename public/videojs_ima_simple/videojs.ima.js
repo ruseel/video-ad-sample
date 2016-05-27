@@ -43,8 +43,23 @@
     adLabel: 'Advertisement'
   },
 
+  // 광고 동영상이 play 되는 동안 정말 video element가 2개 생길까?
+  //   광고 동영상이 play 되는 동안 ima-sdk가 video element를 하나 더 만들까?
+  //     rendering 때문에?
+  //
+  //   iphone은 신경쓰지 말고
+  //     android 6.x 5.x 에서 autoplay 와 overay control을 만드는데 집중할까?
+  //     한데 simulator에서 잘 안보이면...
+  //     가기전에 chrome + osx 에서 mobile emulation으로만 할까?
+  //   그러자.
 
-  // imaPlugin 함수 readyCallback? 뭐에 쓰지?
+  //  자 여러가지 div, videojs 버튼 skip 버튼 진행버튼을 배치만 해보자.
+  //     chrome+osx에서!
+  //
+  //
+
+
+  // imaPlugin 함수, readyCallback? 뭐에 쓰지?
   //   이 함수가 제일 긴 함수고 js가 loading되면 바로 실행되는 거다.
   //   이 안에서 adLoader로 만든다.
   //
@@ -63,6 +78,8 @@
           vjsControls.el().parentNode.appendChild(
               document.createElement('div'));
       adContainerDiv.id = 'ima-ad-container';
+      // 왜 한 번 더 absolute 로 바꿀가?
+      // zIndex 1111 ok.
       adContainerDiv.style.position = "absolute";
       adContainerDiv.style.zIndex = 1111;
       adContainerDiv.addEventListener(
@@ -74,17 +91,28 @@
           player.ima.hideAdControls_,
           false);
       player.ima.createControls_();
+
+      //
+      // XXX 여기서 contentPlayer를 mock으로 던져도 잘 돌아간다?
+      //   videojs-ima와 ima-sdk 사이의 관계를 잘 모르겠다.
+      //   ima-ad-container 같은 경우에는 분명히 여기서 생성하는 거다.
+      //
+      //
       adDisplayContainer =
           new google.ima.AdDisplayContainer(adContainerDiv, contentPlayer);
     };
 
     /**
-     * 컨트롤을 만든다??
      * Creates the controls for the ad.
+     *
      * 아... videojs 따로 vjs-ima 따로 구나...
      * @private
      */
     player.ima.createControls_ = function() {
+      // 광고에 대한 skip control 같은 것을
+      //   IMA-SDK에서 표시하나?
+      //   video-ima 에서 표시하나?
+      //   skip에 대한 것은 없으니 ima-sdk 일 듯.
       controlsDiv = document.createElement('div');
       controlsDiv.id = 'ima-controls-div';
       controlsDiv.style.width = '100%';
@@ -382,6 +410,10 @@
     player.ima.onContentResumeRequested_ = function(adEvent) {
       // 이게 없으면 다른 control이 잘 안보이나?
       //  아닌데... 잘 보였던 듯 하기도 한데...
+
+      alert('onContentResumeRequested_');
+      return;
+
       adsActive = false;
       adPlaying = false;
       player.on('ended', localContentEndedListener);
@@ -607,6 +639,11 @@
       percent = Math.min(Math.max(percent, 0), 100);
       sliderLevelDiv.style.width = percent + "%";
       player.volume(percent / 100); //0-1
+
+
+      // 아... adsManager.setVolume이 아래쪽으로 보내는 무언가인가?
+      //   adsManager가 아래쪽에 있는 player의 facade로서?
+      //
       adsManager.setVolume(percent / 100);
       if (player.volume() == 0) {
         muteDiv.className = 'ima-muted';

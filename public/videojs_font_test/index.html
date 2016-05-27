@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>Video.js Test</title>
+    <link href="../videojs-dist/video-js.min.css" rel="stylesheet">
+    <style media="screen">
+      #container {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      #container > div {
+        padding: 0.5em;
+        box-sizing: border-box;
+        flex: 1 0 150px;
+      }
+      .icons {
+        font-family: VideoJS;
+        font-size: 2em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="container">
+    </div>
+
+    <script type="text/javascript">
+      function insertBoxForChar(label, char) {
+        var div = document.createElement('div');
+        div.innerHTML = label + ": <span class='icons'>" + char + "</span>";
+        document.getElementById("container").appendChild(div);
+      }
+
+      for (var i = 0xf101; i < 0xf11f; i++) {
+        insertBoxForChar(i.toString(16), String.fromCharCode(i));
+      }
+    </script>
+  </body>
+
+</html>

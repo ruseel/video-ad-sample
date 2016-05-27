@@ -15,6 +15,8 @@
  */
 
 #ima-ad-container {
+  /* block , asolute, 100%x100%
+  */
   top: 0px;
   position: absolute;
   display: block;
@@ -24,11 +26,13 @@
 
 /* Move overlay if user fast-clicks play button. */
 .video-js.vjs-playing .bumpable-ima-ad-container {
+  /* bumpable?? 이게 뭐지 */
   margin-top: -40px;
 }
 
 /* Move overlay when controls are active. */
 .video-js.vjs-user-inactive.vjs-playing .bumpable-ima-ad-container {
+  /* user-inactive 이면 top이 0? */
   margin-top: 0px;
 }
 
@@ -39,6 +43,7 @@
 }
 
 #ima-controls-div {
+  /* controls-div 라... 37px,   none, gradient */
   bottom:0px;
   height: 37px;
   position: absolute;
@@ -74,12 +79,14 @@
 }
 
 #ima-countdown-div {
+  /* 11px white shadow */
   height: 11px;
   color: #FFFFFF;
   text-shadow: 0 0 0.2em #000;
 }
 
 #ima-seek-bar-div {
+  /* 3px transparent .4 */
   top: 12px;
   height: 3px;
   position: absolute;
@@ -87,6 +94,7 @@
 }
 
 #ima-progress-div {
+  /* progress  maybe yellow */
   width: 0px;
   height: 3px;
   background-color: #ECC546;
@@ -97,6 +105,8 @@
 }
 
 #ima-play-pause-div, #ima-mute-div, #ima-slider-div, #ima-fullscreen-div {
+  /* 어떻게 이 1개가 left 0 를 하지?
+     left를 나중에 override 하는 거구나.*/
   width: 35px;
   height: 20px;
   top: 11px;
