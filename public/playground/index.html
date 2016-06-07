@@ -2,104 +2,150 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>playground</title>
-    <link rel="stylesheet" href="../videojs-dist/video-js.min.css">
+    <title></title>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
     <style media="screen">
-      .container {
+      .rapsody_placeholder {
         position: relative;
-        width: 100%;
-        background-color: #99d8c9;
+        background-color: blue;
+        width: 640px;
+        height: 360px;
       }
-      .vx {
-        width: 100%;
-        height: 100%;
-      }
-      .vx-like-div {
-        width: 100%;
-        height: 100%;
-        background-color: #2ca25f;
-      }
-      .vp-ad-controls {
+
+      .rapsody-controls {
         position: absolute;
         top: 0;
+        height: 0;
         width: 100%;
         height: 100%;
       }
-      .vp-ad-countdown-div {
-        position: absolute;
-        border: 3px solid red;
-        color: blue;
-        bottom: 0;
-        z-index: 9999;
-      }
-      .vp-ad-big-play-button:before {
-        font-family: VideoJS;
-        color: white;
-        font-size: 7em;
-        content: "\00f101";
-        border: 3px solid white;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-      }
-      .img_wrap {
 
+      .rapsody-center-pannel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .rapsody-bottom-pannel {
+        display: flex;
+        width: 100%;
+
+        position: absolute;
+        bottom: 0;
+        left: 0;
+      }
+
+      .rapsody-bottom-left-pannel {
+        flex-grow: 1;
+      }
+      .rapsody-bottom-right-pannel {
+      }
+
+      .rapsody-play-btn {
+        margin: 10px;
+        width: 100px;
+        height: 100px;
+        color: transparent;
+        background-image: url("//placehold.it/100x100?text=play");
+      }
+
+      .rapsody-pause-btn {
+        display: none;
+        margin: 10px;
+        width: 100px;
+        height: 100px;
+        color: transparent;
+        background-image: url("//placehold.it/100x100?text=pause");
+      }
+
+      .rapsody-replay-btn {
+        display: none;
+        margin: 10px;
+        width: 100px;
+        height: 100px;
+        color: transparent;
+        background-image: url("//placehold.it/100x100?text=replay");
+      }
+
+      .rapsody-progress-bar {
+        position: absolute;
+        bottom: -3px;
+        height: 3px;
+        width: 100%;
+        background-color: #66c2a4;
+      }
+
+      .rapsody-ad-indicator {
+        font-family: AppleGothic;
+        color: white;
+        text-shadow: #616161 0.0em 0.0em 0.3em ;
+        font-size: 11px;
+        margin: 1em;
+      }
+
+      .rapsody-sound-indicator {
+        font-family: AppleGothic;
+        color: white;
+        text-shadow: #616161 0.0em 0.0em 0.3em ;
+        font-size: 11px;
+        margin: 1em;
+      }
+
+      .rapsody-go-to-advertiser-page {
+        font-family: AppleGothic;
+        font-size: 15px;
+        color: white;
+        text-shadow: #616161 0.0em 0.0em 0.3em;
+
+        position: absolute;
+        top: 15px;
+        right: 0;
+        padding-left: 2em;
+        background-color: black;
+        opacity: 0.4;
+
+        width: 15em;
+        height: 3em;
+        border: 1px solid white;
+
+        display: none;
+        align-items: center;
       }
     </style>
   </head>
   <body>
-    <div id='img_wrap' class="img_wrap" style="width:100%">
-      <div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/574574510427F50001" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/574574520213360002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/574574540212600002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/574574550275640002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/57457456027FDE0002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/57457457023C740002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/5745745902704D0002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/5745745A0274F30001" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/5745745B0270EF0004" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/5745745D06105B0002" width="100%" style="display:block;"></div><div style="width:100%"><img src="http://m1.daumcdn.net/svc/image/U03/cartoon/5745745E0208E90001" width="100%" style="display:block;"></div>
-    </div>
-    <div class="container">
-      <!-- <div class="vx-like-div">
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-      </div> -->
-      <video id="vp-ad-video" class="vx">
-        <source src="https://s3-ap-southeast-1.amazonaws.com/vp-campaigns-videos-transcoded-singapore/maze_runner_low.mp4" type="video/mp4">
+    <div class="rapsody_placeholder">
+      <video id="rapsody_video" src="https://s3-ap-southeast-1.amazonaws.com/vp-campaigns-videos-transcoded-singapore/maze_runner_low.mp4">
       </video>
-      <div class="vp-ad-controls">
-        <div class="vp-ad-countdown-div">
-          광고(0:00)
+      <div class="rapsody-controls">
+        <div class="rapsody-center-pannel">
+          <div class="rapsody-play-btn">play</div>
+          <div class="rapsody-pause-btn">pause</div>
+          <div class="rapsody-replay-btn">replay</div>
         </div>
-        <div class="vp-ad-big-play-button">
+        <div class="rapsody-progress-bar"></div>
+        <div class="rapsody-bottom-pannel">
+          <div class="rapsody-bottom-left-pannel">
+            <div class="rapsody-ad-indicator">
+              광고 · 0:00
+            </div>
+          </div>
+          <div class="rapsody-bottom-right-pannel">
+            <div class="rapsody-sound-indicator">
+              ..소리..
+            </div>
+          </div>
+        </div>
+        <div class="rapsody-go-to-advertiser-page">
+          광고주 페이지로 이동
         </div>
       </div>
+
     </div>
 
-    <script type="text/javascript">
-      // getBoundingClientRect는 뭐고
-      // getClientRect는 뭐고
-      // offset은 뭘까?
-
-      function maybeEndOfImgWrap(el, touchEvent) {
-        var TOLERANCE = 500;
-        console.log(el.getBoundingClientRect());
-        console.log(touchEvent.srcElement.getBoundingClientRect());
-        console.log(el.getBoundingClientRect().bottom - touchEvent.srcElement.getBoundingClientRect().bottom);
-        if (Math.abs(el.getBoundingClientRect().bottom - touchEvent.srcElement.getBoundingClientRect().bottom) < TOLERANCE) {
-            return true;
-        }
-      }
-
-      if (navigator.userAgent.match(/iPhone|iPad/i)) {
-        $('.vp-ad-big-play-button').click(function() {
-          console.log('big play button');
-          $('#vp-ad-video')[0].play();
-        })
-      }
-
-      document.addEventListener('touchstart', function(ev) {
-        console.log('touchstart');
-        var isAndroid = navigator.userAgent.match(/Android/i);
-        if (isAndroid && maybeEndOfImgWrap(document.getElementById('img_wrap'), ev)) {
-          console.log("calling play()...")
-          var player = document.getElementById('vp-ad-video');
-          player.play();
-        }
-      });
-
-    </script>
+    <button type="button" class="finish_emul_btn">Finish</button>
+    <script src="playground.js" charset="utf-8"></script>
   </body>
 </html>

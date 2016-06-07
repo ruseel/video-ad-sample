@@ -1,0 +1,14 @@
+설명서
+
+동영상광고만 있는 광고를 play할 때 사용하는
+동영상 player. html5 video element랑
+그 위의 widget들을 표시하거나 click/touch를
+핸들링 하는 css, js로 이루어 진다.
+
+
+click하면 play/pause.
+특정 label을 click 하면 landing page로.
+광고가 왜 나오는지에 대한 설명?
+
+
+rapsody.js 를 include.
