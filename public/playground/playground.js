@@ -43,7 +43,7 @@ controll_off_timer.start = function(timeout_in_millis) {
   console.log("controll_off_timer.start() called");
   this.clear();
   this.timer = setTimeout(function() {
-    feed_event(_control_onoff_fsm, "timeout");
+    transite_to(_control_onoff_fsm, "off");
   }, timeout_in_millis || CONTROL_OFF_TIMEOUT);
 };
 controll_off_timer.clear = function() {
@@ -85,46 +85,20 @@ _control_onoff_fsm.map = {
   "off": {
     "feed_events": {
       "touch": function() {
-        transite_to(_control_onoff_fsm, "tmp-on");
-      },
-      "finish": function() {
         transite_to(_control_onoff_fsm, "on");
       }
     },
     "transition_to": {
-      "tmp-on": function() {
-        controll_off_timer.start();
-        update_controls();
-      }
-    }
-  },
-  "tmp-on": {
-    "feed_events": {
-      "touch": function() {
-        controll_off_timer.start();
-      },
-      "timeout": function() {
-        transite_to(_control_onoff_fsm, "off");
-      },
-      "finish": function() {
-        transite_to(_control_onoff_fsm, "on");
-      }
-    },
-    "transition_to": {
-      "off": function() {
-        update_controls();
-      },
       "on": function() {
-        controll_off_timer.clear();
         update_controls();
       }
     }
   },
   "on": {
     "feed_events": {
-      "play": function() {
+      "touch": function() {
         transite_to(_control_onoff_fsm, "off");
-      },
+      }
     },
     "transition_to": {
       "off": function() {
@@ -133,6 +107,10 @@ _control_onoff_fsm.map = {
     }
   }
 };
+
+function _video() {
+  return document.getElementById('rapsody_video');
+}
 
 var _playing_fsm = {};
 _playing_fsm.name = "_playing_fsm";
@@ -146,9 +124,8 @@ _playing_fsm.map = {
     },
     "transition_to": {
       "playing": function() {
-        feed_event(_control_onoff_fsm, "play");
-        var _video = document.getElementById('rapsody_video');
-        _video.play();
+        transite_to(_control_onoff_fsm, "off");
+        _video().play();
       }
     }
   },
@@ -158,15 +135,23 @@ _playing_fsm.map = {
         transite_to(_playing_fsm, "paused");
       },
       "finish": function() {
-        feed_event(_control_onoff_fsm, "finish");
         transite_to(_playing_fsm, "finished");
+      },
+      "touch": function() {
+        transite_to(_control_onoff_fsm, "on");
+        controll_off_timer.start();
       }
     },
     "transition_to": {
       "paused": function() {
+        transite_to(_control_onoff_fsm, "on");
+        controll_off_timer.clear();
+        _video().pause();
         update_controls();
       },
       "finished": function() {
+        transite_to(_control_onoff_fsm, "on");
+        controll_off_timer.clear();
         update_controls();
       }
     }
@@ -176,7 +161,7 @@ _playing_fsm.map = {
 // ----
 
 $('.rapsody-controls').click(function() {
-  feed_event(_control_onoff_fsm, "touch");
+  feed_event(_playing_fsm, "touch");
 })
 
 $('.rapsody-play-btn').click(function(ev) {
@@ -192,4 +177,19 @@ $('.rapsody-pause-btn').click(function(ev) {
 $('.finish_emul_btn').click(function(ev) {
   feed_event(_playing_fsm, "finish");
   return false;
+});
+
+$('#rapsody_video').bind('timeupdate', function() {
+  var v = document.getElementById('rapsody_video');
+  var tm = v.currentTime.toFixed();
+  var min = Math.floor(v.currentTime / 60);
+  var sec = tm % 60;
+  if (sec < 10) {
+    sec = '0' + sec;
+  }
+  $('.rapsody-ad-indicator > span').html(min + ":" + sec);
+});
+
+$('#rapsody_video').bind('pause', function() {
+  feed_event(_playing_fsm, 'pause');
 });
