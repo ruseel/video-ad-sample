@@ -71,9 +71,11 @@ function update_controls() {
     }
 
     $('.rapsody-go-to-advertiser-page').css('display', 'flex');
+    
   } else if (_control_onoff_fsm.current == "off") {
     $('.rapsody-play-btn').hide();
     $('.rapsody-pause-btn').hide();
+    $('.rapsody-replay-btn').hide();
     $('.rapsody-go-to-advertiser-page').css('display', 'none');
   }
 }
@@ -163,6 +165,19 @@ _playing_fsm.map = {
         update_controls();
       }
     }
+  },
+  "finished": {
+    "feed_events": {
+      "play": function() {
+        transite_to(_playing_fsm, "playing");
+      }
+    },
+    "transition_to": {
+      "playing": function() {
+        transite_to(_control_onoff_fsm, "off");
+        _video().play();
+      },
+    }
   }
 };
 
@@ -177,13 +192,19 @@ $('.rapsody-play-btn').click(function(ev) {
   return false;
 })
 
+$('.rapsody-replay-btn').click(function(ev) {
+  feed_event(_playing_fsm, "play");
+  return false;
+})
+
 $('.rapsody-pause-btn').click(function(ev) {
   feed_event(_playing_fsm, "pause");
   return false;
 })
 
 $('.finish_emul_btn').click(function(ev) {
-  feed_event(_playing_fsm, "finish");
+  _video().currentTime = 150;
+  _video().play();
   return false;
 });
 
