@@ -71,7 +71,7 @@ function update_controls() {
     }
 
     $('.rapsody-go-to-advertiser-page').css('display', 'flex');
-    
+
   } else if (_control_onoff_fsm.current == "off") {
     $('.rapsody-play-btn').hide();
     $('.rapsody-pause-btn').hide();
@@ -202,7 +202,7 @@ $('.rapsody-pause-btn').click(function(ev) {
   return false;
 })
 
-$('.finish_emul_btn').click(function(ev) {
+$('.finish-emul-btn').click(function(ev) {
   _video().currentTime = 150;
   _video().play();
   return false;
@@ -234,3 +234,6 @@ $('#rapsody_video').bind('pause', function() {
 $('#rapsody_video').bind('ended', function() {
   feed_event(_playing_fsm, 'finish');
 });
+
+// ---
+update_controls();
