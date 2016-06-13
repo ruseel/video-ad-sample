@@ -208,7 +208,7 @@ $('.finish-emul-btn').click(function(ev) {
   return false;
 });
 
-$('.rapsody-fullscreen').click(function(ev) {
+$('.rapsody-fullscreen-btn').click(function(ev) {
   _video().webkitRequestFullScreen();
   return false;
 })
