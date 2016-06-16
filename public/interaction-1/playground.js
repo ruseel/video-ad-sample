@@ -1,4 +1,5 @@
 
+
 function transite_to(fsm, new_state) {
   console.log("transite_to(" + fsm.name + ": " + fsm.current + " -> " + new_state + ")");
   old_state = fsm.current;
