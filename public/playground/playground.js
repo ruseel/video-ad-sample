@@ -97,16 +97,36 @@ function getImageBannerURLFromFuckingCompanion(companion) {
 // 이렇게 이쁘게 고치는 것도 말이 된다.
 // v companionAd만 얻자.
 // v imageBannerURL만 얻자.
-
-
-// vast안에서 이미지를 고쳐보자.
+// v vast안에서 이미지를 고쳐보자.
 // v 이미지만 하나 구한다.
 
-// 화면에 두개를 넣어서 구성해보자.
+// v 화면에 두개를 넣어서 구성해보자.
+// v 브라보 무언가 나왔다. 또 이것 저것 적어보자.
 
-// 그리고 class 를 만들어서 다시 배치해보자.
-//   돌아가게만 만들어본다. 거지같이~~!
+// v css pixel 300px로 600px 짜리 이미지가 잘 표시될까?
+// v 신경쓰지 말자. 잘 될거라고 보자.
+//
+// v  workflowy에 적어둔 거랑 비교해보자. 없는 듯 하다.
 
+// 그리고 class 를 만들어서 다시 배치한다. 돌아가게만 만들어본다. 거지같이~~!
+
+function ensure(lhs, msg) {
+  if (!lhs) {
+    throw Error('ensure error: ' + msg);
+  }
+  return lhs;
+}
+
+function displayFuckingMapToPlaceHolder(d, id) {
+  var _v = document.createElement('video')
+  var _img = document.createElement('img')
+  _v.src = d['video'];
+  _img.src = d['image_banner'];
+
+  var _p = ensure(document.getElementById(id), "placeholder should be exsits");
+  _p.appendChild(_img);
+  _p.appendChild(_v);
+}
 
 function main() {
   vastPromise()
@@ -122,9 +142,9 @@ function main() {
               getFuckingCompanion(vastDoc))
         };
     }).then(function(fuckingMap) {
-      console.log(fuckingMap);
+      displayFuckingMapToPlaceHolder(fuckingMap, "placeholder");
     }).catch(function(err) {
-      console.log(err);
+      throw err;
     })
 }
 
