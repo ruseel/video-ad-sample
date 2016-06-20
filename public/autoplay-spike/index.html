@@ -74,6 +74,7 @@
       // offset은 뭘까?
 
       function maybeEndOfImgWrap(el, touchEvent) {
+        // 아 이 때는 visible을 구한 것이 아니라 imgWrap element와의 차이를 구했던 거다.
         var TOLERANCE = 500;
         console.log(el.getBoundingClientRect());
         console.log(touchEvent.srcElement.getBoundingClientRect());

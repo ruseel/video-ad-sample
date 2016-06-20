@@ -5,12 +5,22 @@
   font-style: normal;
 }
 
+.vp-fred-img {
+  display: block;
+  width: 100%;
+}
+
 .rapsody-placeholder {
   position: relative;
-  background-color: blue;
-  width: 600px;
-  height: 340;
+  width: 100%;
 }
+
+.rapsody-placeholder > video {
+  display: block;
+  width: 100%;
+  font-size: 0;
+}
+
 
 .rapsody-controls {
   position: absolute;

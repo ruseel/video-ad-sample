@@ -1,10 +1,33 @@
 window.VP = (function(VP) {
 
+  var DEBUG = true;
+
+  function spy(a) {
+    if (DEBUG) {
+      console.log(a);
+    }
+    return a;
+  }
+
+  function debug() {
+    if (DEBUG) {
+      console.log.apply(console, arguments);
+    }
+  }
+
   function ensure(lhs, msg) {
-    if (!lhs) {
+    if (DEBUG && !lhs) {
       throw Error('ensure error: ' + msg);
     }
     return lhs;
+  }
+
+  function isWIFI() {
+    /** navigator.connector는 직접 Nexus5 chrome, iPhone6 safari, OSX chrome에서 했을 때는
+        Nexus5 chrome에서만 돌아가더라 */
+    if (navigator && navigator.connector) {
+      return navigator.connector.type == 'wifi'
+    }
   }
 
   /**
@@ -16,22 +39,31 @@ window.VP = (function(VP) {
    * ---- View
 
    * VP.Fred.{View,VAST}, VP.RapsodyPlayer.View는
-   * namespace이고 (namespace로 사용하는 객체)이고
-   * VP.RapsodyPlayer는 전역 객체라서 initialize path가 엄척 헷갈린다
+   * namespace(== namespace로 사용하는 객체)이고
+   * VP.RapsodyPlayer는 전역 객체라서 initialization path가 엄척 헷갈린다.
+   * 나의 잘못.
    */
   VP.Fred = {};
-  VP.Fred.main = function(vastDocPromise, perferredHardwarePixelWH) {
-    vastDocPromise.then(function(vastDoc) {
-      VP.Fred.View.buildWithFredValue(
-        VP.Fred.VAST.fredValue(vastDoc, perferredHardwarePixelWH),
-        "placeholder");
-    });
+  VP.Fred.main = function(vastDoc, perferredHardwarePixelWH) {
+
+    VP.Fred.View.buildWithFredValue(
+      spy(VP.Fred.VAST.fredValue(vastDoc, perferredHardwarePixelWH)),
+      "placeholder");
+
+    VP.Fred.VAST.setUpTracking();
+
+    if (!navigator.userAgent.match(/iPhone|iPad/i)) {
+      VP.RapsodyPlayer.setUpAutoPlayInSight(VP.RapsodyPlayer.View.videoEl);
+    }
+
   }
 
   VP.Fred.View = {
     buildWithFredValue: function(fredValue, id) {
       var img = document.createElement('img')
+      img.className = "vp-fred-img";
       img.src = fredValue['image_banner'];
+
 
       var ph = ensure(document.getElementById(id), "placeholder should be exsits");
       ph.appendChild(img);
@@ -42,16 +74,20 @@ window.VP = (function(VP) {
 
   VP.Fred.VAST = {
     fredValue: function(vastDoc, perferredHardwarePixelWH) {
+      var linear = this.firstInlineLinear(vastDoc);
       return {
         video:
           this.videURLFromAMediaFile(
             this.bestMatchInMediaFiles(
-              this.mediaFiles(
-                this.firstInlineLinear(vastDoc)),
+              this.mediaFiles(linear),
               perferredHardwarePixelWH)),
         image_banner:
           this.imageBannerURL(
-            this.firstCompanion(vastDoc))
+            this.firstCompanion(vastDoc)),
+        destination_url:
+          this.clickThrough(linear),
+        click_track:
+          this.clickTracking(linear),
       };
     },
     videURLFromAMediaFile: function(mediaFile) {
@@ -78,23 +114,30 @@ window.VP = (function(VP) {
        .value();
       return m;
     },
+    _find: function(el, selector) {
+      return el.querySelectorAll(selector)[0];
+    },
     imageBannerURL: function(companion) {
-      var lst = companion.getElementsByTagName('StaticResource');
-      if (lst.length > 0) {
-        return lst[0].textContent;
-      }
+      return this._find(companion, 'StaticResource').textContent;
+    },
+    clickThrough: function(linear) {
+      return this._find(linear, 'ClickThrough').textContent;
+    },
+    clickTracking: function(linear) {
+      return this._find(linear, 'ClickTracking').textContent;
+    },
+    setUpTracking: function () {
+      _([0,25,50,75,100]).each(function(t) {
+        VP.RapsodyPlayer.on('timeplayed'+t, function() {
+          // XXX 여기서 trackEvent를 호출한다?
+          console.log('timeplayed'+t);
+        })
+      })
     }
   }
 
   VP.RapsodyPlayer = (function() {
 
-    /**
-     * fsm (finite state manchine)의 주요 함수
-     *   transite_to
-     *   feed_event
-     *
-     * 좀 더 OO 스럽게 고칠 수도 있겠지만 그러지 말아보자.
-     */
     function transite_to(fsm, new_state) {
       console.log("transite_to(" + fsm.name + ": " + fsm.current + " -> " + new_state + ")");
       var old_state = fsm.current;
@@ -141,7 +184,7 @@ window.VP = (function(VP) {
       CONTROL_OFF_TIMEOUT: 5000,
       timer: null,
       start: function(timeout_in_millis) {
-        console.log("controlOffTimer.start() called");
+        debug("controlOffTimer.start() called");
         var self = this;
         self.clear();
         self.timer = setTimeout(function() {
@@ -158,7 +201,7 @@ window.VP = (function(VP) {
 
     // FSM.controllOnOff 는 처음 만들 때는 temp-on state 가 있었던지라
     // 쓸모가 있어 보였는데 지금은 아니다.
-    // 없애나 놓아두나??
+    // 없애나, 놓아두나??
     var FSM = {};
     FSM.controllOnOff = {};
     FSM.controllOnOff.name = "FSM.controllOnOff";
@@ -202,6 +245,10 @@ window.VP = (function(VP) {
           "finish": function() {
             transite_to(FSM.player, "finished");
           },
+          "autoplay-in-sight": function () {
+            muteVolume();
+            transite_to(FSM.player, "playing");
+          }
         },
         "transition_to": {
           "playing": function() {
@@ -225,6 +272,7 @@ window.VP = (function(VP) {
           },
           "touch": function() {
             transite_to(FSM.controllOnOff, "on");
+            recoverVolume();
             controlOffTimer.start();
           }
         },
@@ -257,11 +305,30 @@ window.VP = (function(VP) {
       }
     };
 
+    var q = function(selector) { return document.querySelectorAll(selector)[0]; }
+    var show = function(selector, display) {
+      var el = q(selector);
+      if (el) el.style.display = display || 'block'
+    };
+    var hide = function(selector) {
+      var el = q(selector);
+      if (el) el.style.display = 'none'
+    };
+
+    function muteVolume() {
+      FSM.player.originalVolume = _video().volume;
+      _video().volume = 0;
+    }
+
+    function recoverVolume() {
+      if (FSM.player.originalVolume && _video().volume == 0) {
+        hide('.rapsody-sound-indicator');
+        _video().volume = FSM.player.originalVolume;
+      }
+    }
+
     function updateControls() {
-      console.log("updateControls: " + FSM.controllOnOff.current + ", " + FSM.player.current);
-      var q = function(selector) { return document.querySelectorAll(selector)[0]; }
-      var show = function(selector, display) { q(selector).style.display = display || 'block' };
-      var hide = function(selector) { q(selector).style.display = 'none' };
+      debug("updateControls: " + FSM.controllOnOff.current + ", " + FSM.player.current);
       if (FSM.controllOnOff.current == "on") {
         if (FSM.player.current == "playing") {
           show('.rapsody-pause-btn')
@@ -285,13 +352,25 @@ window.VP = (function(VP) {
       }
     }
 
+    function play() {
+      feed_event(FSM.player, 'play');
+    }
+
+    function pause() {
+      feed_event(FSM.player, 'pause');
+    }
+
     var _o = {
-      updateControls: updateControls,
+      FSM: FSM,
       transite_to: transite_to,
       feed_event: feed_event,
-      FSM: FSM,
+
+      updateControls: updateControls,
+      play: play,
+      pause: pause,
     };
-    // EventEmitter로서의 정체성과 FSM에 event를 발생시키는 것과 이름이 RapsodyPlayer안에서 겹치는 구나.
+
+    // EventEmitter로서의 정체성과 FSM에 event를 발생시키는 것과 이름이 Event로 겹친다.
     VP.EventEmitter.prototype.init.call(_o);
     _.extend(_o, VP.EventEmitter.prototype);
     return _o;
@@ -300,12 +379,14 @@ window.VP = (function(VP) {
   VP.RapsodyPlayer.View = {};
   VP.RapsodyPlayer.View.build = function(fredValue) {
     var self = this;
+    var video_url = fredValue['video']
+      , destination_url = fredValue['destination_url'];
 
     var rapsody_placeholder = document.createElement('div');
     rapsody_placeholder.className = "rapsody-placeholder";
 
     var v = document.createElement('video')
-    v.src = fredValue['video'];
+    v.src = video_url;
     v.id = 'rapsody_video';
     self.videoEl = v;
 
@@ -381,11 +462,17 @@ window.VP = (function(VP) {
         self.videoEl.webkitRequestFullScreen();
       });
 
+    _listen(_findByClassName('rapsody-go-to-advertiser-page'),
+      'click',
+      function () {
+        location.href = destination_url;
+      });
+
     var _fmtTm = function(timeInSec) {
       var tm = timeInSec.toFixed();
       var min = Math.floor(tm / 60);
       var sec = tm % 60;
-      return min + ":" + ((sec < 10) ? sec: '0' + sec);
+      return min + ":" + ((sec < 10) ? '0' + sec: sec);
     }
 
     self.timeLabel = function() {
@@ -412,7 +499,7 @@ window.VP = (function(VP) {
     );
 
     self.videoEl.addEventListener('timeupdate',
-      function(ev) {
+      function() {
         var percent = (v.currentTime / v.duration) * 100;
         _.each([0, 25, 50, 75, 100], function(_p) {
           if (percent >= _p) {
@@ -424,6 +511,33 @@ window.VP = (function(VP) {
     );
 
     return rapsody_placeholder;
+  }
+
+
+  function isElementInViewport (el, visibleRatio) {
+    // http://stackoverflow.com/a/7557433/262425
+    var rect = el.getBoundingClientRect();
+    debug(rect);
+    debug(rect.bottom * visibleRatio, (window.innerHeight || document.documentElement.clientHeight));
+    var visibleRatio = visibleRatio || 1.0;
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.top + rect.height * visibleRatio <= (window.innerHeight || document.documentElement.clientHeight) && /*or $(window).height() */
+        rect.left + rect.width * visibleRatio <= (window.innerWidth || document.documentElement.clientWidth)  * visibleRatio /*or $(window).width() */
+    );
+  };
+
+  VP.RapsodyPlayer.setUpAutoPlayInSight = function(videoEl) {
+    var fired = false;
+    var _ = function(ev) {
+      if (isElementInViewport(videoEl, .5) && !fired) {
+        fired = true;
+        VP.RapsodyPlayer.feed_event(VP.RapsodyPlayer.FSM.player, 'autoplay-in-sight');
+      }
+    };
+    document.addEventListener('touchstart', _);
+    document.addEventListener('touchend', _);
   }
 
   return VP;
@@ -481,28 +595,24 @@ function _testRemoteFetchPromise() {
 
 function toDOM(xhr) { return xhr.responseXML; }
 
-// 요부분에서 promise를 안쓰겠다고 할 때 어떤 모양새가 될지 모르겠네...
-new Promise(function(resolve, reject) {
-    // XXX 핸드폰에서 정말 pixelRatio를 구해서 쓴다.
-    VP.Fred.main(_testRemoteFetchPromise().then(toDOM), {w: 750, h: 750/6*4 });
-    _([0,25,50,75,100]).each(function(t) {
-      VP.RapsodyPlayer.on('timeplayed'+t, function() {
-        // 여기서 한 번 다시 쌓아야 하나?
-        //  track으로 뭔가를 보낸다?
-        console.log('timeplayed'+t);
-      })
-    })
-    setTimeout(resolve, 20);
-}).then(VP.RapsodyPlayer.updateControls);
+_testRemoteFetchPromise()
+ .then(toDOM)
+ .then(function (vastDoc) {
+   // 요청하는 쪽에서 어떻게 요청할까? guide를 어떻게 적을까?
+   //   css를 뭐로 넣어주어야 하나?
+
+   // XXX 핸드폰에서 정말 pixelRatio를 구해서 쓴다.
+   VP.Fred.main(vastDoc, {w: 750, h: 750/6*4 });
+   console.log("calling resolve");
+ })
+ .then(function () {
+   console.log("updateControls");
+   VP.RapsodyPlayer.updateControls();
+ })
 
 
-
-//
-// console.log는 어떻게 하는 것이 좋을까?
-//   build과정에서 알아서 사라지면 제일 좋기는 할텐데..
 //
 //
-//
-// volumn off를 한 번 play가 시작되고 나면 없애자.
+// XXX volumn off를 한 번 play가 시작되고 나면 없애자.
 //
 //
