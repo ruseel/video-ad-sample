@@ -1,6 +1,4 @@
-window.VP = window.VP || {};
-
-(function(VP) {
+window.VP = (function(VP) {
 
   function ensure(lhs, msg) {
     if (!lhs) {
@@ -59,15 +57,11 @@ window.VP = window.VP || {};
       var linear = vastDoc
         .evaluate('/VAST/Ad/InLine/Creatives/Creative/Linear', vastDoc)
         .iterateNext();
-      if (!linear) {
-        throw new Error("no linear element exists");
-      }
-      return linear;
+      return ensure(linear, 'no linear element exists');
     },
     firstCompanion: function(vastDoc) {
       var companion = vastDoc.evaluate('//CompanionAds/Companion', vastDoc).iterateNext();
-      if (!companion) throw Error('no Companion exists');
-      return companion;
+      return ensure(companion, 'no companion element exists');
     },
     mediaFiles: function(node) {
       return node.getElementsByTagName('MediaFile');
@@ -99,8 +93,7 @@ window.VP = window.VP || {};
      *   transite_to
      *   feed_event
      *
-     * 좀 더 OO 스럽게 고칠 수도 있겠지만
-     * 굳이 그러지 말아보자.
+     * 좀 더 OO 스럽게 고칠 수도 있겠지만 그러지 말아보자.
      */
     function transite_to(fsm, new_state) {
       console.log("transite_to(" + fsm.name + ": " + fsm.current + " -> " + new_state + ")");
@@ -163,6 +156,9 @@ window.VP = window.VP || {};
       },
     };
 
+    // FSM.controllOnOff 는 처음 만들 때는 temp-on state 가 있었던지라
+    // 쓸모가 있어 보였는데 지금은 아니다.
+    // 없애나 놓아두나??
     var FSM = {};
     FSM.controllOnOff = {};
     FSM.controllOnOff.name = "FSM.controllOnOff";
@@ -210,7 +206,6 @@ window.VP = window.VP || {};
         "transition_to": {
           "playing": function() {
             transite_to(FSM.controllOnOff, "off");
-            debugger;
             _video().play();
           },
           "finished": function() {
@@ -384,12 +379,9 @@ window.VP = window.VP || {};
 
     var _fmtTm = function(timeInSec) {
       var tm = timeInSec.toFixed();
-      var min = Math.floor(v.currentTime / 60);
+      var min = Math.floor(tm / 60);
       var sec = tm % 60;
-      if (sec < 10) {
-        sec = '0' + sec;
-      }
-      return min + ":" + sec;
+      return min + ":" + ((sec < 10) ? sec: '0' + sec);
     }
 
     self.timeLabel = function() {
@@ -406,17 +398,44 @@ window.VP = window.VP || {};
     self.videoEl.addEventListener(
       'ended', mkFnFeedEventToPlayer('finish'));
 
-    self.videoEl.addEventListener('timeupdate', function() {
-      var v = self.videoEl;
-      self.timeLabel().innerHTML = _fmtTm(v.currentTime);
-      self.progressBarHighlight().style.width =
-        (v.currentTime / v.duration * 100 ) + '%';
-    });
+    self.videoEl.addEventListener('timeupdate',
+      function() {
+        var v = self.videoEl;
+        self.timeLabel().innerHTML = _fmtTm(v.currentTime);
+        self.progressBarHighlight().style.width =
+          (v.currentTime / v.duration * 100) + '%';
+      }
+    );
+
+    self.trackingState = {};
+
+    self.fire = function(ev) {
+      // 여기를 이벤트를 보내는 subscribe로 처리해야 할까?
+      //  rapsodyPlayer에 EventEmitter를 넣는다면 어떻게?
+      console.log("tracking" + _p + "!!!");
+    }
+
+    self.trackingFn = function(ev) {
+      var percent = (v.currentTime / v.duration) * 100;
+      console.log(percent);
+      _.each([0, 25, 50, 75, 100], function(_p) {
+        if (percent >= _p) {
+          var k = new String(_p);
+          if (!self.trackingState[k]) {
+            self.trackingState[k] = 'fired';
+            self.fireTracking(_p);
+          }
+        }
+      });
+    };
+
+    self.videoEl.addEventListener('timeupdate', self.trackingFn);
 
     return rapsody_placeholder;
   }
 
-})(window.VP);
+  return VP;
+})(window.VP || {});
 
 
 
