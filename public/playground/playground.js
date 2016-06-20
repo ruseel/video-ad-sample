@@ -14,6 +14,10 @@ window.VP = (function(VP) {
    * ---- VAST
    * -- RapsodyPlayer
    * ---- View
+
+   * VP.Fred.{View,VAST}, VP.RapsodyPlayer.View는
+   * namespace이고 (namespace로 사용하는 객체)이고
+   * VP.RapsodyPlayer는 전역 객체라서 initialize path가 엄척 헷갈린다
    */
   VP.Fred = {};
   VP.Fred.main = function(vastDocPromise, perferredHardwarePixelWH) {
@@ -82,10 +86,6 @@ window.VP = (function(VP) {
     }
   }
 
-  /*
-   * 이 RapsodyPlayer가 외부에 노출되야 하는 API가 없는 것 같기도 하고
-   * 잘 모르겠다. 일단 완전히 격리되게 (function() {})() 으로 쌓아 두었다.
-   */
   VP.RapsodyPlayer = (function() {
 
     /**
@@ -285,12 +285,16 @@ window.VP = (function(VP) {
       }
     }
 
-    return {
+    var _o = {
       updateControls: updateControls,
       transite_to: transite_to,
       feed_event: feed_event,
       FSM: FSM,
     };
+    // EventEmitter로서의 정체성과 FSM에 event를 발생시키는 것과 이름이 RapsodyPlayer안에서 겹치는 구나.
+    VP.EventEmitter.prototype.init.call(_o);
+    _.extend(_o, VP.EventEmitter.prototype);
+    return _o;
   })();
 
   VP.RapsodyPlayer.View = {};
@@ -407,29 +411,17 @@ window.VP = (function(VP) {
       }
     );
 
-    self.trackingState = {};
-
-    self.fire = function(ev) {
-      // 여기를 이벤트를 보내는 subscribe로 처리해야 할까?
-      //  rapsodyPlayer에 EventEmitter를 넣는다면 어떻게?
-      console.log("tracking" + _p + "!!!");
-    }
-
-    self.trackingFn = function(ev) {
-      var percent = (v.currentTime / v.duration) * 100;
-      console.log(percent);
-      _.each([0, 25, 50, 75, 100], function(_p) {
-        if (percent >= _p) {
-          var k = new String(_p);
-          if (!self.trackingState[k]) {
-            self.trackingState[k] = 'fired';
-            self.fireTracking(_p);
+    self.videoEl.addEventListener('timeupdate',
+      function(ev) {
+        var percent = (v.currentTime / v.duration) * 100;
+        _.each([0, 25, 50, 75, 100], function(_p) {
+          if (percent >= _p) {
+            // :sigh: globals
+            VP.RapsodyPlayer.emit_once("timeplayed" + _p);
           }
-        }
-      });
-    };
-
-    self.videoEl.addEventListener('timeupdate', self.trackingFn);
+        });
+      }
+    );
 
     return rapsody_placeholder;
   }
@@ -492,9 +484,16 @@ function toDOM(xhr) { return xhr.responseXML; }
 // 요부분에서 promise를 안쓰겠다고 할 때 어떤 모양새가 될지 모르겠네...
 new Promise(function(resolve, reject) {
     // XXX 핸드폰에서 정말 pixelRatio를 구해서 쓴다.
-    window.VP.Fred.main(_testRemoteFetchPromise().then(toDOM), {w: 750, h: 750/6*4 })
+    VP.Fred.main(_testRemoteFetchPromise().then(toDOM), {w: 750, h: 750/6*4 });
+    _([0,25,50,75,100]).each(function(t) {
+      VP.RapsodyPlayer.on('timeplayed'+t, function() {
+        // 여기서 한 번 다시 쌓아야 하나?
+        //  track으로 뭔가를 보낸다?
+        console.log('timeplayed'+t);
+      })
+    })
     setTimeout(resolve, 20);
-}).then(window.VP.RapsodyPlayer.updateControls);
+}).then(VP.RapsodyPlayer.updateControls);
 
 
 

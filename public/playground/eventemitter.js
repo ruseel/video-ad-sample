@@ -7,7 +7,8 @@ window.VP = (function(VP) {
   }
 
   VP.EventEmitter.prototype.init = function() {
-    this.listeners={};
+    this.listeners = {};
+    this.emitted = {};
   }
 
   VP.EventEmitter.prototype.on = function(event, listener) {
@@ -24,6 +25,18 @@ window.VP = (function(VP) {
     });
   }
 
+  VP.EventEmitter.prototype.emit_once = function() {
+    var args = _(arguments).toArray();
+    var event = args.shift();
+    var self = this;
+    _(this.listeners[event]).toArray().forEach(function(listener) {
+      if (!self.emitted[event]) {
+        self.emitted[event] = true;
+        listener.apply(self, args);
+      }
+    });
+  }
+
   return VP;
-  
+
 })(window.VP || {});
